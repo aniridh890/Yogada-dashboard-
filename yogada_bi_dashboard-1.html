@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yogada Institute — BI Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --paper:#F6F2EA; --panel:#FFFFFF; --ink:#221E19; --ink-soft:#6E6558;
+  --line:#E6DECE; --line-soft:#F0EAdd; --sidebar:#1E2A22; --sidebar-soft:#B9C4B7;
+  --good:#4C7A5E; --good-bg:#E7F0E9; --watch:#BF8A2A; --watch-bg:#FBEFDA;
+  --risk:#AE463C; --risk-bg:#F7E4E1; --accent:#A9752F; --accent-soft:#F1E3CE;
+  --shadow: 0 1px 2px rgba(34,30,25,.04), 0 6px 20px rgba(34,30,25,.05);
+  --radius: 12px;
+}
+[data-theme="dark"]{
+  --paper:#171A16; --panel:#20241F; --ink:#EFEAE0; --ink-soft:#9AA294;
+  --line:#333B30; --line-soft:#262B23; --sidebar:#0F1410; --sidebar-soft:#8A9585;
+  --good-bg:#1D2C22; --watch-bg:#2E2618; --risk-bg:#2E1E1B; --accent-soft:#33301F;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans',sans-serif; transition:background .25s ease, color .25s ease;}
+::selection{ background:var(--accent-soft); }
+a{color:inherit;}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:20px;
+  padding:12px 26px; background:var(--panel); border-bottom:1px solid var(--line);
+  backdrop-filter:blur(6px);
+}
+.brand{ display:flex; align-items:center; gap:10px; margin-right:8px; flex:none;}
+.brand-mark{
+  width:32px;height:32px;border-radius:8px; flex:none;
+  background:linear-gradient(155deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #2b2016));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif; font-weight:700; color:#fff; font-size:15px;
+  transition:background .3s ease;
+}
+.brand-text .t1{ font-family:'Fraunces',serif; font-weight:600; font-size:14px; line-height:1.1;}
+.brand-text .t2{ font-size:10px; color:var(--ink-soft); }
+
+.role-tabs{ display:flex; gap:4px; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:3px; position:relative; }
+.role-tab{
+  position:relative; z-index:1; border:none; background:transparent; cursor:pointer;
+  font-family:'IBM Plex Sans',sans-serif; font-size:12.5px; font-weight:500; color:var(--ink-soft);
+  padding:8px 14px; border-radius:8px; white-space:nowrap; transition:color .2s ease;
+}
+.role-tab.active{ color:#fff; }
+.tab-indicator{
+  position:absolute; top:3px; bottom:3px; left:3px; border-radius:8px; z-index:0;
+  background:var(--accent); transition:transform .32s cubic-bezier(.4,0,.2,1), width .32s cubic-bezier(.4,0,.2,1), background .3s ease;
+}
+
+.topbar-right{ margin-left:auto; display:flex; align-items:center; gap:14px; }
+.searchbox{
+  display:flex; align-items:center; gap:7px; background:var(--paper); border:1px solid var(--line);
+  border-radius:9px; padding:7px 11px; width:180px; transition:width .2s ease, border-color .2s ease;
+}
+.searchbox:focus-within{ width:230px; border-color:var(--accent); }
+.searchbox input{ border:none; background:transparent; outline:none; font-size:12px; color:var(--ink); width:100%; font-family:'IBM Plex Sans',sans-serif;}
+.icon-btn{
+  width:34px;height:34px; border-radius:9px; border:1px solid var(--line); background:var(--panel);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; color:var(--ink-soft);
+  transition:background .15s ease, color .15s ease;
+}
+.icon-btn:hover{ background:var(--accent-soft); color:var(--accent); }
+.badge-dot{
+  position:absolute; top:-3px; right:-3px; width:15px;height:15px;border-radius:50%;
+  background:var(--risk); color:#fff; font-size:9px; display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--panel); font-weight:700;
+}
+.avatar{
+  width:34px;height:34px;border-radius:50%; background:var(--accent); color:#fff;
+  display:flex;align-items:center;justify-content:center; font-size:12px;font-weight:600; cursor:pointer; flex:none;
+  transition:background .3s ease;
+}
+.dropdown{
+  position:absolute; top:46px; right:0; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  box-shadow:var(--shadow); width:270px; padding:10px; display:none; z-index:50;
+}
+.dropdown.open{ display:block; animation:pop .16s ease; }
+@keyframes pop{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;} }
+.dropdown h4{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin:4px 6px 8px; font-weight:600;}
+.dropdown-item{ display:flex; gap:9px; padding:8px 6px; border-radius:7px; cursor:pointer; align-items:flex-start;}
+.dropdown-item:hover{ background:var(--paper); }
+.dd-dot{ width:7px;height:7px;border-radius:50%; margin-top:5px; flex:none;}
+.dropdown-item .dd-title{ font-size:12.5px; font-weight:500;}
+.dropdown-item .dd-sub{ font-size:11px; color:var(--ink-soft); }
+.pos-rel{ position:relative; }
+
+/* ===== LAYOUT ===== */
+.layout{ display:grid; grid-template-columns:230px 1fr; }
+.sidebar{ background:var(--sidebar); color:var(--sidebar-soft); padding:22px 16px; min-height:calc(100vh - 61px); }
+.side-label{ font-size:10px; letter-spacing:.06em; color:#8C9A8B; margin:14px 6px 8px; }
+.nav-item{
+  display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; font-size:12.5px;
+  color:#A9B4A5; cursor:pointer; margin-bottom:2px; border-left:2px solid transparent; transition:all .15s ease;
+}
+.nav-item:hover{ background:rgba(255,255,255,.05); color:#fff; }
+.nav-item.current{ background:rgba(255,255,255,.08); color:#fff; border-left-color:var(--accent); }
+.nav-item .bullet{ width:4px;height:4px;border-radius:50%; background:#6C7A6A; flex:none;}
+.nav-item.current .bullet{ background:var(--accent); }
+.sidebar-footer{ margin-top:22px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08); font-size:10px; color:#79876F; line-height:1.6;}
+.theme-row{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding:9px 10px; background:rgba(255,255,255,.04); border-radius:9px;}
+.theme-row span{ font-size:11.5px; color:#C7CFC2;}
+.switch{ width:34px;height:19px;border-radius:20px;background:#39432F; position:relative; cursor:pointer; flex:none;}
+.switch::after{ content:''; position:absolute; width:15px;height:15px;border-radius:50%; background:#fff; top:2px; left:2px; transition:transform .2s ease;}
+.switch.on{ background:var(--accent); }
+.switch.on::after{ transform:translateX(15px); }
+
+.main{ padding:24px 30px 70px; max-width:1180px; }
+
+/* ===== HERO ===== */
+.hero{
+  border-radius:16px; padding:26px 28px; margin-bottom:22px; position:relative; overflow:hidden; color:#fff;
+  background:linear-gradient(120deg, var(--accent), color-mix(in srgb, var(--accent) 45%, #1c1912));
+  transition:background .3s ease;
+}
+.hero::before{
+  content:''; position:absolute; right:-40px; top:-60px; width:260px;height:260px; border-radius:50%;
+  background:rgba(255,255,255,.08);
+}
+.hero::after{
+  content:''; position:absolute; right:60px; bottom:-70px; width:170px;height:170px; border-radius:50%;
+  background:rgba(255,255,255,.06);
+}
+.hero-top{ display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:1;}
+.hero .eyebrow{ font-size:11px; opacity:.8; letter-spacing:.04em; margin-bottom:6px;}
+.hero h1{ font-family:'Fraunces',serif; font-size:27px; font-weight:600; margin:0 0 6px; letter-spacing:-.01em;}
+.hero .sub{ font-size:12.5px; opacity:.85; max-width:480px; line-height:1.5;}
+.hero-highlight{ text-align:right; }
+.hero-highlight .hv{ font-family:'Fraunces',serif; font-size:25px; font-weight:700;}
+.hero-highlight .hl{ font-size:10.5px; opacity:.8; margin-top:2px;}
+.hero-meta{ display:flex; gap:18px; margin-top:16px; position:relative; z-index:1; flex-wrap:wrap;}
+.hero-meta .hm{ font-size:11px; background:rgba(255,255,255,.14); padding:5px 11px; border-radius:20px;}
+
+/* ===== KPI ===== */
+.kpi-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:8px; }
+.kpi{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px 15px;
+  cursor:pointer; box-shadow:var(--shadow); transition:transform .15s ease, border-color .15s ease;
+}
+.kpi:hover{ transform:translateY(-2px); border-color:var(--accent); }
+.kpi .k-top{ display:flex; justify-content:space-between; align-items:center;}
+.kpi .k-label{ font-size:10.5px; color:var(--ink-soft); }
+.kpi .k-chevron{ font-size:10px; color:var(--ink-soft); transition:transform .2s ease;}
+.kpi.expanded .k-chevron{ transform:rotate(180deg); }
+.kpi .k-value{ font-family:'Fraunces',serif; font-size:20px; font-weight:600; margin:7px 0 8px;}
+.kpi .k-bar{ height:5px;border-radius:3px;background:var(--line-soft); overflow:hidden; margin-bottom:8px;}
+.kpi .k-bar>div{ height:100%; border-radius:3px; }
+.k-status{ display:inline-block; font-size:10px; padding:2px 8px; border-radius:20px; font-weight:500;}
+.status-good{background:var(--good-bg);color:var(--good);}
+.status-watch{background:var(--watch-bg);color:var(--watch);}
+.status-risk{background:var(--risk-bg);color:var(--risk);}
+.k-spark{ height:0; overflow:hidden; transition:height .25s ease; margin-top:0;}
+.kpi.expanded .k-spark{ height:70px; margin-top:10px;}
+
+/* ===== SECTIONS ===== */
+.section-head{ display:flex; align-items:center; gap:10px; margin:28px 0 12px; scroll-margin-top:70px;}
+.section-head .rule{ flex:1;height:1px;background:var(--line);}
+.section-head h2{ font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; color:var(--ink-soft); margin:0; white-space:nowrap;}
+
+.grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:14px;}
+.grid-2.even{ grid-template-columns:1fr 1fr;}
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 18px 8px; box-shadow:var(--shadow);}
+.panel h3{ font-family:'Fraunces',serif; font-size:14.5px; font-weight:600; margin:0 0 12px; display:flex; align-items:center; gap:8px;}
+.tag-pill{ font-size:9px; padding:2px 7px; border-radius:20px; background:var(--paper); color:var(--ink-soft); border:1px solid var(--line); font-family:'IBM Plex Sans',sans-serif; font-weight:400;}
+.chart-wrap{ height:210px; }
+
+.table-panel{ margin-top:16px; }
+.table-tools{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:10px; flex-wrap:wrap;}
+.mini-search{ display:flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:var(--paper);}
+.mini-search input{ border:none; background:transparent; outline:none; font-size:12px; color:var(--ink); width:140px;}
+table{ width:100%; border-collapse:collapse; font-size:12.5px;}
+th{ text-align:left; font-size:10px; color:var(--ink-soft); font-weight:500; padding:8px 8px; border-bottom:1px solid var(--line); text-transform:uppercase; letter-spacing:.03em;}
+td{ padding:10px 8px; border-bottom:1px solid var(--line-soft); }
+tr.clickable{ cursor:pointer; transition:background .12s ease;}
+tr.clickable:hover td{ background:var(--paper); }
+tr.hidden-row{ display:none; }
+.row-status{ font-size:10px; padding:2px 8px; border-radius:20px; font-weight:500;}
+
+.btn-row{ display:flex; gap:10px; margin:14px 0 16px; }
+.btn{ border:none;border-radius:8px;padding:9px 15px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans',sans-serif; transition:opacity .15s ease, transform .1s ease;}
+.btn:active{ transform:scale(.97); }
+.btn-dark{ background:var(--accent); color:#fff; }
+.btn-dark:hover{ opacity:.88; }
+.btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+.btn-ghost:hover{ background:var(--paper); }
+
+.footnote{ margin-top:22px;padding-top:14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--ink-soft);display:flex;justify-content:space-between;}
+
+.role-panel{ display:none; }
+.role-panel.active{ display:block; }
+.kpi-row, .grid-2, .panel{ animation:fadeUp .35s ease; }
+@keyframes fadeUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+/* ===== DRAWER ===== */
+.overlay{ position:fixed; inset:0; background:rgba(20,17,12,.35); display:none; z-index:60; }
+.overlay.open{ display:block; animation:fadeIn .18s ease; }
+@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+.drawer{
+  position:fixed; top:0; right:-380px; width:360px; height:100%; background:var(--panel);
+  border-left:1px solid var(--line); z-index:61; padding:22px; transition:right .28s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;
+}
+.drawer.open{ right:0; }
+.drawer-close{ float:right; cursor:pointer; color:var(--ink-soft); font-size:18px; line-height:1;}
+.drawer h3{ font-family:'Fraunces',serif; font-size:19px; margin:6px 0 3px;}
+.drawer .drawer-sub{ font-size:12px; color:var(--ink-soft); margin-bottom:18px;}
+.drawer-field{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line-soft); font-size:12.5px;}
+.drawer-field span:first-child{ color:var(--ink-soft);}
+.drawer-note{ margin-top:16px; background:var(--paper); border-radius:9px; padding:12px; font-size:12px; line-height:1.6; color:var(--ink-soft);}
+
+/* ===== TOASTS ===== */
+.toast-wrap{ position:fixed; bottom:22px; right:22px; z-index:80; display:flex; flex-direction:column; gap:8px;}
+.toast{
+  background:var(--sidebar); color:#fff; padding:11px 16px; border-radius:9px; font-size:12.5px;
+  box-shadow:var(--shadow); display:flex; align-items:center; gap:9px; animation:toastIn .25s ease;
+  min-width:220px;
+}
+@keyframes toastIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+.toast .dot{ width:7px;height:7px;border-radius:50%; background:var(--good); flex:none;}
+
+@media (max-width:980px){
+  .layout{ grid-template-columns:1fr; }
+  .sidebar{ display:none; }
+  .grid-2,.grid-2.even{ grid-template-columns:1fr; }
+  .main{ padding:18px; }
+  .role-tabs{ overflow-x:auto; }
+  .drawer{ width:88%; right:-100%; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark" id="brandMark">Y</div>
+    <div class="brand-text">
+      <div class="t1">Yogada Institute</div>
+      <div class="t2">Hospitality Management · BI Console</div>
+    </div>
+  </div>
+
+  <div class="role-tabs" id="roleTabs">
+    <div class="tab-indicator" id="tabIndicator"></div>
+    <button class="role-tab active" data-role="director">Director</button>
+    <button class="role-tab" data-role="academic">Academic Head</button>
+    <button class="role-tab" data-role="frontdesk">Front Desk</button>
+    <button class="role-tab" data-role="placement">Placement</button>
+  </div>
+
+  <div class="topbar-right">
+    <div class="searchbox">
+      <span>⌕</span><input id="globalSearch" placeholder="Search students, hotels, batches…">
+    </div>
+    <div class="pos-rel">
+      <div class="icon-btn" id="bellBtn">🔔<span class="badge-dot" id="alertCount">3</span></div>
+      <div class="dropdown" id="bellDropdown"></div>
+    </div>
+    <div class="pos-rel">
+      <div class="avatar" id="avatarBtn">DR</div>
+      <div class="dropdown" id="avatarDropdown">
+        <h4>Signed in as</h4>
+        <div class="dropdown-item"><span class="dd-dot" style="background:var(--accent)"></span><div><div class="dd-title" id="ddName">Director</div><div class="dd-sub">Yogada Institute · Full access</div></div></div>
+        <h4 style="margin-top:10px;">Preferences</h4>
+        <div class="dropdown-item" id="ddTheme"><span class="dd-dot" style="background:var(--good)"></span><div><div class="dd-title">Toggle dark mode</div><div class="dd-sub">Switch console appearance</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div id="sidenav"></div>
+    <div class="theme-row" id="themeRow">
+      <span>Dark mode</span>
+      <div class="switch" id="themeSwitch"></div>
+    </div>
+    <div class="sidebar-footer">Yogada Institute BI Console<br>v3.0 — Role-based access<br>Source: TallyPrime (read-only sync)</div>
+  </div>
+
+  <div class="main" id="mainArea"></div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <span class="drawer-close" id="drawerClose">✕</span>
+  <div id="drawerContent"></div>
+</div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ============ DATA ============ */
+const ROLE_META = {
+  director:  { label:"Director", initials:"DR", accent:"#A9752F", eyebrow:"Strategic Overview", title:"Director Dashboard",
+    sub:"Institute-wide health at a glance — revenue, compliance, and batch strength.",
+    hv:"₹1,84,200", hl:"Today's fee collection", meta:["Last visit: yesterday, 6:40 PM","Source: TallyPrime · read-only"] },
+  academic:  { label:"Academic Head", initials:"AH", accent:"#5C7A5E", eyebrow:"Academic Operations", title:"Academic / Training Head Dashboard",
+    sub:"Trainer accountability and student attendance, before they become the Director's problem.",
+    hv:"74%", hl:"Average attendance today", meta:["4 of 4 batches running","11 of 12 trainers active"] },
+  frontdesk: { label:"Front Desk", initials:"FD", accent:"#8B4B3F", eyebrow:"Counter Operations", title:"Front Desk / Admissions Insights",
+    sub:"A same-day pulse-check for the counter — fee billing itself stays in Tally.",
+    hv:"17", hl:"Enquiries today", meta:["Conversion rate: 46%","Live sync: this evening"] },
+  placement: { label:"Placement", initials:"PM", accent:"#3F6B72", eyebrow:"Industry Relations", title:"Placement & Industry Relations Manager",
+    sub:"Hotel partnerships and placement pipeline for the graduating batch.",
+    hv:"78%", hl:"Overall placement rate", meta:["9 active hotel partners","3 drives scheduled this month"] },
+};
+
+const NAV = {
+  director:  ["Overview","Fee Reports","Batch Overview","Affiliation / Compliance","Trainer Performance","Hotel Tie-ups","Settings"],
+  academic:  ["Overview","Trainer Performance","Batch Health","Attendance Alerts","Fee Waivers","Exam Results","Settings"],
+  frontdesk: ["Overview","Recent Transactions","Fee Dues","Student Lookup","Daily Reports","Settings"],
+  placement: ["Overview","Placement Drives","Hotel Partners","Unplaced Students","Department Readiness","Alumni Tracker","Settings"],
+};
+
+const KPIS = {
+  director: [
+    {label:"Today's Fee Collection", value:"₹1,84,200", pct:78, color:"good", status:"Above average", statusType:"good", spark:[120,140,132,150,168,158,184]},
+    {label:"Net Surplus (Term)", value:"₹9.6L", pct:64, color:"good", status:"Improving", statusType:"good", spark:[6.1,6.8,7.2,7.9,8.4,9.1,9.6]},
+    {label:"Affiliation Renewal Due", value:"18 days", pct:22, color:"risk", status:"Urgent", statusType:"risk", spark:[40,34,30,26,22,20,18]},
+    {label:"Total Batch Strength", value:"214 students", pct:71, color:"accent", status:"Steady", statusType:"good", spark:[200,204,206,210,212,213,214]},
+    {label:"Active Trainers", value:"12", pct:80, color:"accent", status:"Full strength", statusType:"good", spark:[10,10,11,11,12,12,12]},
+    {label:"Hotel Tie-ups", value:"9 partners", pct:55, color:"watch", status:"2 lapsing", statusType:"watch", spark:[11,11,10,10,9,9,9]},
+  ],
+  academic: [
+    {label:"Trainers Active Today", value:"11 / 12", pct:92, color:"good", status:"Healthy", statusType:"good", spark:[10,11,11,12,11,12,11]},
+    {label:"Batches Running", value:"4 of 4", pct:100, color:"good", status:"On schedule", statusType:"good", spark:[4,4,4,4,4,4,4]},
+    {label:"Low-Attendance Alerts", value:"4 students", pct:35, color:"risk", status:"Needs review", statusType:"risk", spark:[2,2,3,3,4,4,4]},
+    {label:"Fee Waiver / Refund", value:"6.2%", pct:30, color:"watch", status:"Monitor", statusType:"watch", spark:[4.1,4.5,5.0,5.4,5.8,6.0,6.2]},
+    {label:"Avg. Attendance", value:"74%", pct:74, color:"accent", status:"Below target", statusType:"watch", spark:[80,78,77,76,75,74,74]},
+  ],
+  frontdesk: [
+    {label:"Today's Enquiries", value:"17", pct:65, color:"accent", status:"Steady pace", statusType:"good", spark:[9,12,10,14,11,15,17]},
+    {label:"Fee Collected Today", value:"₹1,84,200", pct:78, color:"good", status:"On track", statusType:"good", spark:[120,132,110,150,165,184,184]},
+    {label:"Avg. Fee per Admission", value:"₹36,800", pct:60, color:"accent", status:"Normal", statusType:"good", spark:[34,35,36,35,37,36,37]},
+    {label:"Pending Fee Dues", value:"₹62,400", pct:40, color:"watch", status:"Follow-up", statusType:"watch", spark:[80,76,70,68,64,63,62]},
+    {label:"Conversion Rate", value:"46%", pct:46, color:"accent", status:"Improving", statusType:"good", spark:[38,40,41,43,44,45,46]},
+  ],
+  placement: [
+    {label:"Active Hotel Partners", value:"9", pct:65, color:"accent", status:"Stable", statusType:"good", spark:[8,8,9,9,9,9,9]},
+    {label:"Placement Drives This Month", value:"3", pct:50, color:"accent", status:"On plan", statusType:"good", spark:[1,1,2,2,3,3,3]},
+    {label:"Unplaced Students", value:"22", pct:38, color:"risk", status:"Final-year batch", statusType:"risk", spark:[30,28,27,25,24,23,22]},
+    {label:"Pending Offer Letters", value:"6", pct:30, color:"watch", status:"Chase up", statusType:"watch", spark:[10,9,8,7,7,6,6]},
+    {label:"Overall Placement Rate", value:"78%", pct:78, color:"good", status:"Trending up", statusType:"good", spark:[68,70,72,74,75,77,78]},
+  ],
+};
+
+const STUDENTS = [
+  {name:"Rohit Sen", batch:"Housekeeping — B3", attendance:"41%", status:"At risk", statusType:"risk",
+    detail:{Trainer:"S. Rawat","Guardian contact":"+91 98xxxxxx21","Term fee status":"Paid in full","Last attended":"6 days ago",
+      note:"Attendance dropped sharply after mid-term. Housekeeping batch overall running below minimum threshold — flagged to Academic Head."}},
+  {name:"Priya Nair", batch:"Housekeeping — B3", attendance:"47%", status:"At risk", statusType:"risk",
+    detail:{Trainer:"S. Rawat","Guardian contact":"+91 98xxxxxx77","Term fee status":"Partial waiver (10%)","Last attended":"4 days ago",
+      note:"Requested waiver review pending. Attendance recovering slightly over the last week."}},
+  {name:"Aman Josh", batch:"F&B Service — B4", attendance:"58%", status:"Watch", statusType:"watch",
+    detail:{Trainer:"M. Kaul","Guardian contact":"+91 98xxxxxx09","Term fee status":"Paid in full","Last attended":"2 days ago",
+      note:"Borderline case — one more missed week would move this student to At Risk."}},
+  {name:"Devika Rao", batch:"Housekeeping — B3", attendance:"44%", status:"At risk", statusType:"risk",
+    detail:{Trainer:"S. Rawat","Guardian contact":"+91 98xxxxxx55","Term fee status":"Fee due — ₹4,200","Last attended":"5 days ago",
+      note:"Combined attendance and fee-due case. Front desk has an open follow-up task."}},
+];
+
+const TRANSACTIONS = [
+  {receipt:"RCT-A", student:"Kabir Anand", payment:"Full", type:"good", time:"Morning",
+    detail:{Amount:"₹38,000", Mode:"UPI", Course:"Culinary Arts", "Receipt no.":"RCT-A / 2026-09-06"}},
+  {receipt:"RCT-B", student:"Neha Prasad", payment:"Full", type:"good", time:"Morning",
+    detail:{Amount:"₹34,500", Mode:"Card", Course:"Front Office", "Receipt no.":"RCT-B / 2026-09-06"}},
+  {receipt:"RCT-C", student:"Walk-in / Rina D.", payment:"Token", type:"watch", time:"Morning",
+    detail:{Amount:"₹5,000", Mode:"Cash", Course:"Undecided", "Receipt no.":"RCT-C / 2026-09-06", note:"Follow-up call scheduled tomorrow."}},
+  {receipt:"RCT-D", student:"Yash Verma", payment:"Full", type:"good", time:"Morning",
+    detail:{Amount:"₹36,800", Mode:"Online Transfer", Course:"F&B Service", "Receipt no.":"RCT-D / 2026-09-06"}},
+  {receipt:"RCT-E", student:"Simran Kaur", payment:"Partial", type:"watch", time:"Morning",
+    detail:{Amount:"₹18,000 of ₹36,000", Mode:"Cash", Course:"Housekeeping", "Receipt no.":"RCT-E / 2026-09-06", note:"Balance due in 15 days."}},
+];
+
+const HOTELS = [
+  {name:"Taj Group", engagement:"Strong", type:"good", detail:{"Placements this season":18, Contact:"HR — R. Malhotra", "Last drive":"3 weeks ago", note:"Consistently our top recruiting partner across Front Office and Culinary."}},
+  {name:"Marriott", engagement:"Strong", type:"good", detail:{"Placements this season":15, Contact:"HR — S. Iyer", "Last drive":"1 month ago", note:"Renewed MoU this term."}},
+  {name:"Lemon Tree", engagement:"Strong", type:"good", detail:{"Placements this season":11, Contact:"HR — A. Gill", "Last drive":"2 weeks ago"}},
+  {name:"ITC Hotels", engagement:"Moderate", type:"watch", detail:{"Placements this season":8, Contact:"HR — K. Das", "Last drive":"2 months ago", note:"Engagement cooling — worth a check-in call this month."}},
+  {name:"Oberoi Group", engagement:"Steady", type:"watch", detail:{"Placements this season":6, Contact:"HR — P. Nanda", "Last drive":"6 weeks ago"}},
+];
+
+/* ============ RENDER ============ */
+let activeRole = 'director';
+
+function statusClass(t){ return t==='good' ? 'status-good' : t==='watch' ? 'status-watch' : 'status-risk'; }
+function barColor(c){ return c==='good' ? 'var(--good)' : c==='watch' ? 'var(--watch)' : c==='risk' ? 'var(--risk)' : 'var(--accent)'; }
+
+function kpiCard(k, idx, role){
+  return `<div class="kpi" data-idx="${idx}" data-role="${role}">
+    <div class="k-top"><div class="k-label">${k.label}</div><div class="k-chevron">▾</div></div>
+    <div class="k-value">${k.value}</div>
+    <div class="k-bar"><div style="width:${k.pct}%;background:${barColor(k.color)};"></div></div>
+    <span class="k-status ${statusClass(k.statusType)}">${k.status}</span>
+    <div class="k-spark"><canvas></canvas></div>
+  </div>`;
+}
+
+function tableRows(data, cols, statusField){
+  return data.map((row,i)=>{
+    const cells = cols.map(c=>{
+      if(c === statusField){
+        return `<td><span class="row-status ${statusClass(row.type||row.statusType)}">${row[c]}</span></td>`;
+      }
+      return `<td>${row[c]}</td>`;
+    }).join('');
+    return `<tr class="clickable" data-idx="${i}">${cells}</tr>`;
+  }).join('');
+}
+
+function renderNav(role){
+  const el = document.getElementById('sidenav');
+  el.innerHTML = `<div class="side-label">${ROLE_META[role].label.toUpperCase()} MENU</div>` +
+    NAV[role].map((it,i)=>`<div class="nav-item ${i===0?'current':''}" data-nav="${it}"><span class="bullet"></span>${it}</div>`).join('');
+  el.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      el.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('current'));
+      item.classList.add('current');
+      const targetId = 'sec-'+item.dataset.nav.replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+      const target = document.getElementById(targetId);
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      else window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+}
+
+function heroHTML(role){
+  const m = ROLE_META[role];
+  return `<div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">${m.eyebrow}</div>
+        <h1>${m.title}</h1>
+        <div class="sub">${m.sub}</div>
+      </div>
+      <div class="hero-highlight"><div class="hv">${m.hv}</div><div class="hl">${m.hl}</div></div>
+    </div>
+    <div class="hero-meta">${m.meta.map(x=>`<span class="hm">${x}</span>`).join('')}</div>
+  </div>`;
+}
+
+function sectionHead(id, label){ return `<div class="section-head" id="sec-${id}"><h2>${label}</h2><div class="rule"></div></div>`; }
+
+function renderMain(role){
+  const el = document.getElementById('mainArea');
+  let html = heroHTML(role);
+  html += `<div class="kpi-row">${KPIS[role].map((k,i)=>kpiCard(k,i,role)).join('')}</div>`;
+
+  if(role === 'director'){
+    html += sectionHead('fee-reports','REVENUE & ENROLMENT');
+    html += `<div class="grid-2">
+      <div class="panel"><h3>Top Performing Batches <span class="tag-pill">by revenue</span></h3><div class="chart-wrap"><canvas id="c1"></canvas></div></div>
+      <div class="panel"><h3>Course-wise Revenue Split</h3><div class="chart-wrap"><canvas id="c2"></canvas></div></div>
+    </div>
+    <div class="panel" style="margin-top:14px;"><h3>Cash vs Online Fee Trend <span class="tag-pill">trend only</span></h3><div class="chart-wrap" style="height:180px;"><canvas id="c3"></canvas></div></div>`;
+
+    html += sectionHead('batch-overview','SINCE YOUR LAST VISIT & COMPLIANCE');
+    html += `<div class="grid-2 even">
+      <div class="panel"><h3>Since Your Last Visit</h3><table>
+        <tr><th>Metric</th><th>Status</th></tr>
+        <tr><td>Yesterday's fee collection</td><td><span class="row-status status-good">Healthy</span></td></tr>
+        <tr><td>Batches below minimum attendance</td><td><span class="row-status status-risk">Flagged</span></td></tr>
+        <tr><td>New enquiries</td><td><span class="row-status status-watch">Steady</span></td></tr>
+        <tr><td>Placement offers received</td><td><span class="row-status status-good">On track</span></td></tr>
+      </table></div>
+      <div class="panel" id="sec-affiliation-compliance"><h3>Upcoming Compliance Deadlines</h3><table>
+        <tr><th>Item</th><th>Timeframe</th><th>Status</th></tr>
+        <tr><td>Skill council affiliation renewal</td><td>This month</td><td><span class="row-status status-risk">Urgent</span></td></tr>
+        <tr><td>Trainer TDS return (Q2)</td><td>Next month</td><td><span class="row-status status-watch">Upcoming</span></td></tr>
+        <tr><td>Fire &amp; safety audit</td><td>Next month</td><td><span class="row-status status-good">Scheduled</span></td></tr>
+      </table></div>
+    </div>`;
+
+    html += sectionHead('trainer-performance','TRAINER & HOTEL TIE-UPS');
+    html += `<div class="grid-2 even">
+      <div class="panel"><h3>Trainer Performance Snapshot</h3><table>
+        <tr><th>Trainer</th><th>Batch</th><th>Attendance</th></tr>
+        <tr><td>Chef R. Suri</td><td>Culinary B1</td><td>91%</td></tr>
+        <tr><td>A. Bhatia</td><td>Front Office B2</td><td>85%</td></tr>
+        <tr><td>S. Rawat</td><td>Housekeeping B3</td><td>52%</td></tr>
+        <tr><td>M. Kaul</td><td>F&amp;B Service B4</td><td>68%</td></tr>
+      </table></div>
+      <div class="panel" id="sec-hotel-tie-ups"><h3>Hotel Tie-ups</h3><table>
+        <tr><th>Partner</th><th>Engagement</th></tr>
+        <tr><td>Taj Group</td><td><span class="row-status status-good">Strong</span></td></tr>
+        <tr><td>Marriott</td><td><span class="row-status status-good">Strong</span></td></tr>
+        <tr><td>ITC Hotels</td><td><span class="row-status status-watch">Moderate</span></td></tr>
+      </table></div>
+    </div>
+    <div id="sec-settings"></div>`;
+  }
+
+  if(role === 'academic'){
+    html += sectionHead('trainer-performance','BATCH & TRAINER OVERVIEW');
+    html += `<div class="grid-2">
+      <div class="panel"><h3>Attendance Level by Batch — Today</h3><div class="chart-wrap"><canvas id="c1"></canvas></div></div>
+      <div class="panel"><h3>Trainer Hours: Teaching vs Admin</h3><div class="chart-wrap"><canvas id="c2"></canvas></div></div>
+    </div>`;
+
+    html += sectionHead('batch-health','BATCH-WISE ATTENDANCE — TODAY');
+    html += `<div class="panel table-panel"><h3>Batch-wise Attendance</h3><table>
+      <tr><th>Batch</th><th>Trainer</th><th>Attendance</th><th>Status</th></tr>
+      <tr><td>Culinary Arts — B1</td><td>Chef R. Suri</td><td>91%</td><td><span class="row-status status-good">Healthy</span></td></tr>
+      <tr><td>Front Office — B2</td><td>A. Bhatia</td><td>85%</td><td><span class="row-status status-good">Healthy</span></td></tr>
+      <tr><td>Housekeeping — B3</td><td>S. Rawat</td><td>52%</td><td><span class="row-status status-risk">At risk</span></td></tr>
+      <tr><td>F&amp;B Service — B4</td><td>M. Kaul</td><td>68%</td><td><span class="row-status status-watch">Watch</span></td></tr>
+    </table></div>`;
+
+    html += sectionHead('attendance-alerts','LOW-ATTENDANCE / AT-RISK STUDENTS');
+    html += `<div class="panel table-panel">
+      <div class="table-tools"><h3 style="margin:0;">At-Risk Students <span class="tag-pill">click a row for detail</span></h3>
+        <div class="mini-search"><span>⌕</span><input id="studentSearch" placeholder="Filter students…"></div></div>
+      <table><tr><th>Student</th><th>Batch</th><th>Attendance</th><th>Status</th></tr>
+        <tbody id="studentRows">${tableRows(STUDENTS,['name','batch','attendance','status'],'status')}</tbody>
+      </table>
+      <div class="btn-row"><button class="btn btn-dark" data-toast="Batch report opened">View full batch report</button><button class="btn btn-ghost" data-toast="Daily summary exported">Export daily summary</button></div>
+    </div>
+    <div id="sec-fee-waivers"></div><div id="sec-exam-results"></div><div id="sec-settings"></div>`;
+  }
+
+  if(role === 'frontdesk'){
+    html += sectionHead('recent-transactions','WEEKLY TREND');
+    html += `<div class="grid-2">
+      <div class="panel"><h3>Enquiries This Week</h3><div class="chart-wrap"><canvas id="c1"></canvas></div></div>
+      <div class="panel"><h3>Fee Collection Trend <span class="tag-pill">trend only</span></h3><div class="chart-wrap"><canvas id="c2"></canvas></div></div>
+    </div>`;
+
+    html += sectionHead('fee-dues',"TODAY'S ACTIVITY — LIVE FROM TALLY");
+    html += `<div class="grid-2 even">
+      <div class="panel table-panel">
+        <div class="table-tools"><h3 style="margin:0;">Recent Transactions</h3>
+          <div class="mini-search"><span>⌕</span><input id="txnSearch" placeholder="Filter transactions…"></div></div>
+        <table><tr><th>Receipt</th><th>Student</th><th>Payment</th><th>Time</th></tr>
+          <tbody id="txnRows">${tableRows(TRANSACTIONS,['receipt','student','payment','time'],'payment')}</tbody>
+        </table>
+        <div class="btn-row"><button class="btn btn-dark" data-toast="Handed off to Tally for new entry">Open Tally for new fee entry</button><button class="btn btn-ghost" data-toast="Today's summary exported">Export today's summary</button></div>
+      </div>
+      <div class="panel" id="sec-student-lookup"><h3>Walk-in → Enrolment</h3><table>
+        <tr><th>Metric</th><th>Level</th></tr>
+        <tr><td>Walk-ins today</td><td><div class="k-bar" style="width:110px;"><div style="width:70%;background:var(--accent);"></div></div></td></tr>
+        <tr><td>Converted to admission</td><td><div class="k-bar" style="width:110px;"><div style="width:46%;background:var(--good);"></div></div></td></tr>
+        <tr><td>Conversion rate</td><td><div class="k-bar" style="width:110px;"><div style="width:46%;background:var(--good);"></div></div></td></tr>
+        <tr><td>Follow-ups scheduled</td><td><div class="k-bar" style="width:110px;"><div style="width:34%;background:var(--watch);"></div></div></td></tr>
+      </table></div>
+    </div>`;
+    html += sectionHead('daily-reports','DAILY REPORTS');
+    html += `<div class="panel"><h3>Today's Snapshot</h3><p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;">17 enquiries logged, 5 receipted transactions, ₹62,400 in pending dues flagged for follow-up calls this evening. Export a full end-of-day summary using the button above.</p></div>
+    <div id="sec-settings"></div>`;
+  }
+
+  if(role === 'placement'){
+    html += sectionHead('placement-drives','PLACEMENT PIPELINE');
+    html += `<div class="grid-2">
+      <div class="panel"><h3>Placed Students by Hotel Partner</h3><div class="chart-wrap"><canvas id="c1"></canvas></div></div>
+      <div class="panel"><h3>Department-wise Readiness Split</h3><div class="chart-wrap"><canvas id="c2"></canvas></div></div>
+    </div>`;
+
+    html += sectionHead('department-readiness','DEPARTMENT-WISE SKILL READINESS');
+    html += `<div class="panel table-panel"><h3>Skill Readiness by Department</h3><table>
+      <tr><th>Department</th><th>Readiness</th></tr>
+      <tr><td>Front Office</td><td><div class="k-bar" style="width:140px;"><div style="width:82%;background:var(--good);"></div></div></td></tr>
+      <tr><td>F&amp;B Service</td><td><div class="k-bar" style="width:140px;"><div style="width:75%;background:var(--good);"></div></div></td></tr>
+      <tr><td>Housekeeping</td><td><div class="k-bar" style="width:140px;"><div style="width:48%;background:var(--watch);"></div></div></td></tr>
+      <tr><td>Culinary Arts</td><td><div class="k-bar" style="width:140px;"><div style="width:88%;background:var(--good);"></div></div></td></tr>
+    </table></div>`;
+
+    html += sectionHead('hotel-partners','HOTEL-WISE PLACEMENTS — THIS SEASON');
+    html += `<div class="panel table-panel">
+      <div class="table-tools"><h3 style="margin:0;">Hotel Partners <span class="tag-pill">click a row for detail</span></h3>
+        <div class="mini-search"><span>⌕</span><input id="hotelSearch" placeholder="Filter hotels…"></div></div>
+      <table><tr><th>Hotel Partner</th><th>Engagement</th></tr>
+        <tbody id="hotelRows">${tableRows(HOTELS,['name','engagement'],'engagement')}</tbody>
+      </table>
+      <div class="btn-row"><button class="btn btn-dark" data-toast="Placement drive scheduled">Schedule placement drive</button><button class="btn btn-ghost" data-toast="Placement report exported">Export placement report</button></div>
+    </div>
+    <div id="sec-unplaced-students"></div><div id="sec-alumni-tracker"></div><div id="sec-settings"></div>`;
+  }
+
+  html += `<div class="footnote"><span>Data source: TallyPrime — read-only sync</span><span>Yogada Institute BI Console v3.0</span></div>`;
+  el.innerHTML = html;
+  bindMainEvents(role);
+  drawCharts(role);
+}
+
+/* ============ EVENTS ============ */
+function bindMainEvents(role){
+  document.querySelectorAll('.kpi').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const wasOpen = card.classList.contains('expanded');
+      document.querySelectorAll('.kpi').forEach(c=>c.classList.remove('expanded'));
+      if(!wasOpen){
+        card.classList.add('expanded');
+        const idx = +card.dataset.idx;
+        const k = KPIS[role][idx];
+        const canvas = card.querySelector('.k-spark canvas');
+        if(canvas && !canvas.dataset.drawn){
+          new Chart(canvas, {
+            type:'line',
+            data:{ labels:k.spark.map((_,i)=>i+1), datasets:[{ data:k.spark, borderColor:barColor(k.color), backgroundColor:barColor(k.color), tension:.35, borderWidth:2, pointRadius:0, fill:false }]},
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}} }
+          });
+          canvas.dataset.drawn = '1';
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-toast]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showToast(btn.dataset.toast));
+  });
+
+  bindRowClicks('studentRows', STUDENTS, 'name', 'batch');
+  bindRowClicks('txnRows', TRANSACTIONS, 'student', 'receipt');
+  bindRowClicks('hotelRows', HOTELS, 'name', 'engagement');
+
+  bindFilter('studentSearch','studentRows',STUDENTS,['name','batch']);
+  bindFilter('txnSearch','txnRows',TRANSACTIONS,['student','receipt']);
+  bindFilter('hotelSearch','hotelRows',HOTELS,['name']);
+}
+
+function bindRowClicks(bodyId, data, titleField, subField){
+  const body = document.getElementById(bodyId);
+  if(!body) return;
+  body.querySelectorAll('tr').forEach((tr,i)=>{
+    tr.addEventListener('click', ()=> openDrawer(data[i], titleField, subField));
+  });
+}
+
+function bindFilter(inputId, bodyId, data, fields){
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  input.addEventListener('input', ()=>{
+    const term = input.value.toLowerCase();
+    const rows = document.getElementById(bodyId).querySelectorAll('tr');
+    rows.forEach((tr,i)=>{
+      const match = fields.some(f => String(data[i][f]).toLowerCase().includes(term));
+      tr.classList.toggle('hidden-row', !match);
+    });
+  });
+}
+
+function openDrawer(item, titleField, subField){
+  const content = document.getElementById('drawerContent');
+  let fields = '';
+  Object.entries(item.detail || {}).forEach(([k,v])=>{
+    if(k === 'note') return;
+    fields += `<div class="drawer-field"><span>${k}</span><span>${v}</span></div>`;
+  });
+  const note = item.detail && item.detail.note ? `<div class="drawer-note">${item.detail.note}</div>` : '';
+  content.innerHTML = `<h3>${item[titleField]}</h3><div class="drawer-sub">${item[subField] || ''}</div>${fields}${note}`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('overlay').addEventListener('click', closeDrawer);
+
+function showToast(msg){
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span class="dot"></span>${msg}`;
+  wrap.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(6px)'; t.style.transition='all .25s ease'; setTimeout(()=>t.remove(),260); }, 2600);
+}
+
+/* ============ CHARTS ============ */
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.font.size = 11;
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function barChart(ctx, labels, data, color){
+  return new Chart(ctx, { type:'bar', data:{labels, datasets:[{data, backgroundColor:color, borderRadius:5, maxBarThickness:32}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}}, y:{grid:{color:cssVar('--line')}, ticks:{display:false}}}} });
+}
+function donutChart(ctx, labels, data, colors){
+  return new Chart(ctx, { type:'doughnut', data:{labels, datasets:[{data, backgroundColor:colors, borderWidth:2, borderColor:cssVar('--panel')}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:'62%', plugins:{legend:{position:'right', labels:{boxWidth:10,boxHeight:10,padding:12,color:cssVar('--ink-soft')}}}} });
+}
+function lineChart(ctx, labels, datasets){
+  return new Chart(ctx, { type:'line', data:{labels, datasets:datasets.map(d=>({...d, tension:.35, borderWidth:2, pointRadius:2, fill:false}))},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top', align:'end', labels:{boxWidth:10,boxHeight:10,color:cssVar('--ink-soft')}}}, scales:{x:{grid:{display:false}}, y:{grid:{color:cssVar('--line')}, ticks:{display:false}}}} });
+}
+
+function drawCharts(role){
+  const accent = ROLE_META[role].accent;
+  if(role==='director'){
+    barChart(document.getElementById('c1'), ['Culinary B1','F&B B2','Front Off. B3','Housekeep. B4','Bakery B5'], [420,340,300,180,140], accent);
+    donutChart(document.getElementById('c2'), ['Culinary Arts','F&B Service','Front Office','Housekeeping'], [38,27,21,14], ['#7A3B34',accent,'#C9A56A','#DCCBA8']);
+    lineChart(document.getElementById('c3'), ['W1','W2','W3','W4','W5','W6','W7'],
+      [{label:'Cash', data:[40,44,38,46,50,42,48], borderColor:cssVar('--ink'), backgroundColor:cssVar('--ink')},
+       {label:'Online', data:[60,62,68,66,70,74,76], borderColor:accent, backgroundColor:accent}]);
+  }
+  if(role==='academic'){
+    barChart(document.getElementById('c1'), ['Culinary B1','Front Off. B2','Housekeep. B3','F&B B4'], [91,85,52,68], accent);
+    donutChart(document.getElementById('c2'), ['Teaching Hours','Admin / Prep','On Leave'], [64,26,10], [accent,'#BF8A2A','#D8D1C2']);
+  }
+  if(role==='frontdesk'){
+    barChart(document.getElementById('c1'), ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], [9,7,6,10,12,5,3], accent);
+    lineChart(document.getElementById('c2'), ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      [{label:'Fee Collected', data:[120000,132000,110000,150000,165000,184000,90000], borderColor:accent, backgroundColor:accent}]);
+  }
+  if(role==='placement'){
+    barChart(document.getElementById('c1'), ['Taj Group','Marriott','Lemon Tree','ITC Hotels','Oberoi'], [18,15,11,8,6], accent);
+    donutChart(document.getElementById('c2'), ['Front Office','F&B Service','Housekeeping','Culinary Arts'], [82,75,48,88], [accent,'#C9A56A','#BF8A2A','#4C7A5E']);
+  }
+}
+
+/* ============ ALERTS DROPDOWN ============ */
+const ALERTS = {
+  director:[{c:"var(--risk)",t:"Affiliation renewal due in 18 days",s:"Skill council · action needed"},{c:"var(--watch)",t:"2 hotel tie-ups lapsing",s:"Renew outreach this month"},{c:"var(--good)",t:"Yesterday's collection above average",s:"₹1,84,200 collected"}],
+  academic:[{c:"var(--risk)",t:"4 students flagged at-risk",s:"Housekeeping B3, F&B B4"},{c:"var(--watch)",t:"Fee waiver rate rising",s:"6.2% of term revenue"},{c:"var(--good)",t:"11 of 12 trainers active today",s:"Full batch coverage"}],
+  frontdesk:[{c:"var(--watch)",t:"₹62,400 in pending dues",s:"5 students to follow up"},{c:"var(--good)",t:"Conversion rate improving",s:"46% this week"},{c:"var(--watch)",t:"1 partial payment logged",s:"Simran Kaur — balance due in 15 days"}],
+  placement:[{c:"var(--risk)",t:"22 students still unplaced",s:"Final-year batch, act soon"},{c:"var(--watch)",t:"ITC Hotels engagement cooling",s:"Last drive 2 months ago"},{c:"var(--good)",t:"Placement rate trending up",s:"78% overall"}],
+};
+function renderAlerts(role){
+  const el = document.getElementById('bellDropdown');
+  el.innerHTML = `<h4>Alerts for ${ROLE_META[role].label}</h4>` + ALERTS[role].map(a=>
+    `<div class="dropdown-item"><span class="dd-dot" style="background:${a.c}"></span><div><div class="dd-title">${a.t}</div><div class="dd-sub">${a.s}</div></div></div>`).join('');
+  document.getElementById('alertCount').textContent = ALERTS[role].length;
+}
+
+/* ============ ROLE SWITCH ============ */
+function setRole(role){
+  activeRole = role;
+  const m = ROLE_META[role];
+  document.documentElement.style.setProperty('--accent', m.accent);
+  document.getElementById('avatarBtn').textContent = m.initials;
+  document.getElementById('ddName').textContent = m.label;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.toggle('active', t.dataset.role===role));
+  moveIndicator();
+  renderNav(role);
+  renderMain(role);
+  renderAlerts(role);
+  closeAllDropdowns();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function moveIndicator(){
+  const activeTab = document.querySelector('.role-tab.active');
+  const ind = document.getElementById('tabIndicator');
+  ind.style.width = activeTab.offsetWidth + 'px';
+  ind.style.transform = `translateX(${activeTab.offsetLeft - 3}px)`;
+}
+document.querySelectorAll('.role-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=> setRole(tab.dataset.role));
+});
+window.addEventListener('resize', moveIndicator);
+
+/* ============ DROPDOWNS ============ */
+function closeAllDropdowns(){
+  document.getElementById('bellDropdown').classList.remove('open');
+  document.getElementById('avatarDropdown').classList.remove('open');
+}
+document.getElementById('bellBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('avatarDropdown').classList.remove('open');
+  document.getElementById('bellDropdown').classList.toggle('open');
+});
+document.getElementById('avatarBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('bellDropdown').classList.remove('open');
+  document.getElementById('avatarDropdown').classList.toggle('open');
+});
+document.addEventListener('click', closeAllDropdowns);
+
+/* ============ THEME ============ */
+function toggleTheme(){
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeSwitch').classList.toggle('on', !isDark);
+}
+document.getElementById('themeSwitch').addEventListener('click', toggleTheme);
+document.getElementById('ddTheme').addEventListener('click', toggleTheme);
+
+/* ============ GLOBAL SEARCH ============ */
+document.getElementById('globalSearch').addEventListener('input', (e)=>{
+  const term = e.target.value.toLowerCase();
+  ['studentSearch','txnSearch','hotelSearch'].forEach(id=>{
+    const input = document.getElementById(id);
+    if(input){ input.value = term; input.dispatchEvent(new Event('input')); }
+  });
+});
+
+/* ============ INIT ============ */
+setRole('director');
+window.addEventListener('load', moveIndicator);
+</script>
+</body>
+</html>
